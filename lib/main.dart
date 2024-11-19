@@ -30,10 +30,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> { 
-  final List<Map> _data = []; // 1
+
+  var _isAscending = true; // 1昇順(true)か？のフラグ
+  var _currentSortColumn = 0; // 2ソートする列のインデックス
+
+  final List<Map> _data = []; 
     
   _MyHomePageState(){
-    for(int i = 1; i <= 5; i++){ // 2
+    for(int i = 1; i <= 5; i++){ 
       _data.add({ 'name': 'アイテム$i', 'price': i * 100 ,
                   'selected': false });
     }
@@ -41,19 +45,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<DataRow> rows = []; // 3
+    final List<DataRow> rows = []; 
 
-    _data.asMap().forEach((i, e){ // 4
+    _data.asMap().forEach((i, e){ 
       
-      if(e['selected']){ // 5
+      if(e['selected']){ 
         print(e['name']);
       }
 
       final row = DataRow(
-        selected: e['selected'],  // 6
-          onSelectChanged: (bool? value) { // 7
+        selected: e['selected'],  
+          onSelectChanged: (bool? value) { 
             setState(() {
-              e['selected'] = value!; // 8
+              e['selected'] = value!; 
             });
         },
         cells: [
@@ -65,12 +69,33 @@ class _MyHomePageState extends State<MyHomePage> {
       rows.add(row); // リストに追加
     });
 
-    const columns = [ 
-      DataColumn( label: Text('商品名'), ),
-      DataColumn( label: Text('値段'), ),
+    final columns = [ // const → final
+      const DataColumn( label: Text('商品名'), ),
+      DataColumn(
+        label: const Text('値段'),
+        onSort: (columnIndex, isAscending) {
+          setState(() {
+            _currentSortColumn = columnIndex;
+            print(columnIndex); // デバッグ用
+            
+            if (_isAscending == true) { // 昇順 → 降順
+              _isAscending = false;
+
+              _data.sort(
+                (a, b) => b['price'].compareTo(a['price']),
+              );
+            } else { // 降順 → 昇順
+              _isAscending = true;
+              _data.sort((a, b) => a['price'].compareTo(b['price']));
+            }
+          });
+        }
+      ),
     ];
     
     final datatable = DataTable(
+      sortColumnIndex: _currentSortColumn,
+      sortAscending: _isAscending,
       columns: columns,
       rows: rows, 
     );
